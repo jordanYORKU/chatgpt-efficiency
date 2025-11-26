@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Eval Page</title>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="style.css">
+    </head>
+
+    <body>
+        <div class="navbar-container">
+            <div class="project-title">ITEC4020//Project Evaluation</div>
+            <nav class="navbar">
+                <div class="nav-frame">
+                    <div class="nav-item"><a href="profiles.html">Profiles</a></div>
+                    <div class="nav-item"><a href="intro.html">Introduction</a></div>
+                    <div class="nav-item"><a href="eval.html">Evaluation</a></div>
+                </div>
+            </nav>
+            <div class="api-status">
+                <div class="api-status-pill">
+                    <span class="status-text">API Connection Online</span>
+                    <span class="status-indicator"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="text-side">
+                <div class="title" style="margin-left: 10px;">Tech Stack and Data</div>
+                <div class="divider" style="margin-left: 10px;"></div>
+                <div class="body-text typewriter3" style="margin-left: 10px;">
+                    MongoDB:
+                    MongoDB stores all the data used to evaluate ChatGPT's accuracy such as test questions, expected answers, and performance metrics. Its flexible structure makes it easy to save and retrieve the data our website and display it through charts and comparisons.
+                    <br><br>
+                    Node.js:
+                    Node.js runs the backend of our project, handling requests from the website, connecting to MongoDB, and communicating with the ChatGPT API. It manages the workflow of sending prompts, saving results, and returning processed data to the front end. 
+                    <br><br>
+                    ChatGPT API:
+                    The ChatGPT API generates the responses our system evaluates. It provides the output that our project compares against the chosen datasets, allowing the website to display accuracy scores, performance trends, and other visual insights.    
+                    <br><br> 
+                    Datasets:
+                    The datasets span History, Social Science, and Computer Security, covering factual historical information, concepts about society and human behaviour, and foundational cybersecurity principles. These topics help evaluate ChatGPT's accuracy across both general and technical domains.
+                </div>
+            </div>
+
+            <div class="right-box" style="margin-right: -70px;">
+                <div class="right-box-title">Live Messages</div>
+                <div class="right-box-divider"></div>
+                <div class="right-box-inner"></div>
+            </div>
+        </div>
+    </body>
+    <script src="script.js"></script>
+
+<div>
+  <canvas id="myChart"></canvas>
+</div>
+
+<div style="margin-top: 40px;">
+  <canvas id="myChart2"></canvas>
+</div>
+
+<div style="margin-top: 40px;">
+  <canvas id="myChart3"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="index.js"></script>
+
+<script>
+// Bar Chart - Overall Accuracy
+const ctx = document.getElementById('myChart');
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['Correct', 'Incorrect'],
+    datasets: [{
+      label: 'Overall Accuracy',
+      data: [0, 0],
+      backgroundColor: [
+        'rgba(75, 192, 192, 0.6)',
+        'rgba(255, 99, 132, 0.6)'
+      ],
+      borderColor: [
+        'rgba(75, 192, 192, 1)',
+        'rgba(255, 99, 132, 1)'
+      ],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  }
+});
+
+// Grouped Bar Chart - Accuracy by Domain
+const ctx2 = document.getElementById('myChart2');
+const chart2 = new Chart(ctx2, {
+  type: 'bar',
+  data: {
+    labels: ['CompSec', 'History', 'Social'],
+    datasets: [
+      {
+        label: 'Correct',
+        data: [0, 0, 0],
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      },
+      {
+        label: 'Incorrect',
+        data: [0, 0, 0],
+        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  }
+});
+
+// Line Chart - Response Times
+const ctx3 = document.getElementById('myChart3');
+const chart3 = new Chart(ctx3, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Response Times (ms)',
+      data: [], // FIXED: Changed from [addResponseTime] to []
+      borderWidth: 3,
+      borderColor: 'rgba(153, 102, 255, 1)',
+      backgroundColor: 'rgba(153, 102, 255, 0.2)',
+      tension: 0.4,
+      fill: true
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Time (ms)'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Question #'
+        }
+      }
+    }
+  }
+});
+
+// Load chart data from API
+async function loadChartData() {
+  try {
+    const response = await fetch('http://localhost:3000/api/results');
+    const data = await response.json();
+
+    // Update overall accuracy chart (Chart 1)
+    chart.data.datasets[0].data = [
+      data.overall.correct,
+      data.overall.incorrect
+    ];
+    chart.update();
+
+    // Update accuracy by domain chart (Chart 2)
+    chart2.data.datasets[0].data = [
+      data.byDomain.CompSec.correct,
+      data.byDomain.History.correct,
+      data.byDomain.Social.correct
+    ];
+    chart2.data.datasets[1].data = [
+      data.byDomain.CompSec.incorrect,
+      data.byDomain.History.incorrect,
+      data.byDomain.Social.incorrect
+    ];
+    chart2.update();
+
+    // ADDED: Update response time chart (Chart 3) if data exists
+    if (data.responseTimes && Array.isArray(data.responseTimes)) {
+      chart3.data.labels = data.responseTimes.map((_, index) => `Q${index + 1}`);
+      chart3.data.datasets[0].data = data.responseTimes;
+      chart3.update();
+    }
+
+    console.log('Chart data loaded:', data);
+  } catch (error) {
+    console.error('Error loading chart data:', error);
+  }
+}
+
+// Function to add response time to chart 3
+function addResponseTime(questionNumber, responseTime) {
+  chart3.data.labels.push(`Q${questionNumber}`);
+  chart3.data.datasets[0].data.push(responseTime);
+  
+  // Keep only last 20 data points
+  if (chart3.data.labels.length > 20) {
+    chart3.data.labels.shift();
+    chart3.data.datasets[0].data.shift();
+  }
+  
+  chart3.update();
+}
+
+// Load initial data
+loadChartData();
+
+// OPTIONAL: Auto-refresh data every 5 seconds
+setInterval(loadChartData, 5000);
+</script>
+
+</html>
