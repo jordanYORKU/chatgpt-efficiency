@@ -1,56 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Intro Page</title>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="style.css">
-        <script>typewriter()</script>
-    </head>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Intro Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script>typewriter()</script>
+</head>
 
-    <body>
-        <div class="navbar-container">
+<body>
 
-            <div class="project-title">ITEC4020//Project Introduction</div>
+    <div class="navbar-container">
+        <div class="project-title">ITEC4020//Project Introduction</div>
 
-            <nav class="navbar">
-                <div class="nav-frame">
-                    <div class="nav-item"><a href="profiles.html">Profiles</a></div>
-                    <div class="nav-item"><a href="index.html">Introduction</a></div>
-                    <div class="nav-item"><a href="eval.html">Evaluation</a></div>
-                </div>
-            </nav>
+        <nav class="navbar">
+            <div class="nav-frame">
+                <div class="nav-item"><a href="profiles.html">Profiles</a></div>
+                <div class="nav-item"><a href="index.html">Introduction</a></div>
+                <div class="nav-item"><a href="eval.html">Evaluation</a></div>
+            </div>
+        </nav>
 
-            <div class="api-status">
-                <div class="api-status-pill">
-                    <span class="status-text">API Connection Online</span>
-                    <span class="status-indicator"></span>
-                </div>
+        <div class="api-status">
+            <div class="api-status-pill">
+                <span class="status-text">API Connection Online</span>
+                <span class="status-indicator"></span>
             </div>
         </div>
+    </div>
 
-        <div class="content" style="display: block;">
-            <img src="images/chatGPTlogo.svg" class="intro-bg" alt="">
-            <div class="title">Our Project</div>
-            <div class="divider"></div>
-            <div class="body-text typewriter">
-                This project brings together multiple areas of modern software development, blending web design principles, front-end implementation, API integration, and interactive data-visualization techniques.
-                <br><br>
-                Through this combination, this project not only focuses on building a functional and user-friendly web interface, but also uses that interface as a platform for systematically examining and evaluating ChatGPT’s efficiency across a wide range of domains.
-                <br><br>
-                By integrating visual analytics, responsive design, and real-time data retrieval, our project highlights how thoughtful web design can enhance the process of interpreting, presenting, and comparing ChatGPT’s performance in meaningful and intuitive ways.
-                <button class="run-button" id="runButton" onclick="runTest()">RUN</button>
+    <div class="content" style="display: block;">
+        <img src="images/chatGPTlogo.svg" class="intro-bg" alt="">
+
+        <div class="title">Our Project</div>
+        <div class="divider"></div>
+
+        <div class="body-text typewriter">
+            This project brings together multiple areas of modern software development, blending web design principles, front-end implementation, API integration, and interactive data-visualization techniques.
+            <br><br>
+            Through this combination, this project not only focuses on building a functional and user-friendly web interface, but also uses that interface as a platform for systematically examining and evaluating ChatGPT’s efficiency across a wide range of domains.
+            <br><br>
+            By integrating visual analytics, responsive design, and real-time data retrieval, our project highlights how thoughtful web design can enhance the process of interpreting, presenting, and comparing ChatGPT’s performance in meaningful and intuitive ways.
         </div>
-    </body>
-    <script src="script.js"></script>
+
+        <!-- RUN button placed PROPERLY BELOW the text -->
+        <div class="run-button-container">
+            <button class="run-button" id="runButton" onclick="runTest()">RUN ANALYSIS</button>
+        </div>
+    </div>
+
     <script>
         async function runTest() {
             const button = document.getElementById('runButton');
-            
+
             button.disabled = true;
             button.textContent = 'RUNNING...';
-            
+
             try {
                 await fetch('http://localhost:3000/api/run-test', {
                     method: 'POST',
@@ -62,14 +68,13 @@
                 console.error('Error:', error);
             } finally {
                 button.disabled = false;
-                button.textContent = 'RUN';
+                button.textContent = 'RUN PROJECT';
             }
         }
     </script>
-            </div>
-            
-    </div>
-    </body>
+
     <script src="script.js"></script>
+
+</body>
 </html>
 
