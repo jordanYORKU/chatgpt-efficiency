@@ -41,7 +41,33 @@
                 <br><br>
                 By integrating visual analytics, responsive design, and real-time data retrieval, our project highlights how thoughtful web design can enhance the process of interpreting, presenting, and comparing ChatGPT’s performance in meaningful and intuitive ways.
             </div>
+            <button class="run-button" id="runButton" onclick="runTest()">RUN</button>
         </div>
+    </body>
+    <script src="script.js"></script>
+    <script>
+        async function runTest() {
+            const button = document.getElementById('runButton');
+            
+            button.disabled = true;
+            button.textContent = 'RUNNING...';
+            
+            try {
+                await fetch('http://localhost:3000/api/run-test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'RUN';
+            }
+        }
+    </script>
+    </div>
     </body>
     <script src="script.js"></script>
 </html>
