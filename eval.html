@@ -16,7 +16,7 @@
                     <div class="nav-item"><a href="profiles.html">Profiles</a></div>
                     <div class="nav-item"><a href="index.html">Introduction</a></div>
                     <div class="nav-item"><a href="eval.html">Evaluation</a></div>
-                </div>
+                              </div>
             </nav>
             <div class="api-status">
                 <div class="api-status-pill">
@@ -54,120 +54,348 @@
     </body>
     <script src="script.js"></script>
 
-<div>
-  <canvas id="myChart"></canvas>
-</div>
-<div style="margin-top: 40px;">
-  <canvas id="myChart2"></canvas>
-</div>
+<div class="grid-container">
+    <!-- Computer Security Section -->
+    <div class="chart-container">
+      <div class="subject-header compsec">Computer Security</div>
+      <div class="chart-title">Accuracy</div>
+      <canvas id="compsecAccuracy"></canvas>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="module" src="index.js"></script>
+    <div class="chart-container">
+      <div class="subject-header compsec">Computer Security</div>
+      <div class="chart-title">Response Times</div>
+      <canvas id="compsecResponseTime"></canvas>
+      <div class="avg-display">
+        <div class="avg-label">Average Response Time</div>
+        <div>
+          <span class="avg-value" id="compsecAvg">-</span>
+          <span class="avg-unit">ms</span>
+        </div>
+      </div>
+    </div>
 
-<script>
-// Bar Chart - Overall Accuracy
-const ctx = document.getElementById('myChart');
-const chart = new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: ['Correct', 'Incorrect'],
-    datasets: [{
-      label: 'Overall Accuracy',
-      data: [152, 165],
-      backgroundColor: [
-        'rgba(75, 192, 192, 0.6)',
-        'rgba(255, 99, 132, 0.6)'
-      ],
-      borderColor: [
-        'rgba(75, 192, 192, 1)',
-        'rgba(255, 99, 132, 1)'
-      ],
-      borderWidth: 1
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1
-        }
-      }
-    }
-  }
-});
+    <!-- History Section -->
+    <div class="chart-container">
+      <div class="subject-header history">History</div>
+      <div class="chart-title">Accuracy</div>
+      <canvas id="historyAccuracy"></canvas>
+    </div>
 
+    <div class="chart-container">
+      <div class="subject-header history">History</div>
+      <div class="chart-title">Response Times</div>
+      <canvas id="historyResponseTime"></canvas>
+      <div class="avg-display" style="border-left-color: #f5576c;">
+        <div class="avg-label">Average Response Time</div>
+        <div>
+          <span class="avg-value" id="historyAvg">-</span>
+          <span class="avg-unit">ms</span>
+        </div>
+      </div>
+    </div>
 
-// Line Chart - Response Times
-const ctx2 = document.getElementById('myChart2');
-const chart2 = new Chart(ctx2, {
-  type: 'line',
-  data: {
-    labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5'],
-    datasets: [{
-      label: 'Response Times (ms)',
-      data: [132, 152, 167, 252, 136], 
-      borderWidth: 3,
-      borderColor: 'rgba(153, 102, 255, 1)',
-      backgroundColor: 'rgba(153, 102, 255, 0.2)',
-      tension: 0.4,
-      
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Time (ms)'
-        }
+    <!-- Social Studies Section -->
+    <div class="chart-container">
+      <div class="subject-header social">Social Studies</div>
+      <div class="chart-title">Accuracy</div>
+      <canvas id="socialAccuracy"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-header social">Social Studies</div>
+      <div class="chart-title">Response Times</div>
+      <canvas id="socialResponseTime"></canvas>
+      <div class="avg-display" style="border-left-color: #4facfe;">
+        <div class="avg-label">Average Response Time</div>
+        <div>
+          <span class="avg-value" id="socialAvg">-</span>
+          <span class="avg-unit">ms</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Computer Security Accuracy Chart
+    const compsecAccuracyChart = new Chart(document.getElementById('compsecAccuracy'), {
+      type: 'bar',
+      data: {
+        labels: ['Correct', 'Incorrect'],
+        datasets: [{
+          label: 'Computer Security',
+          data: [0, 0],
+          backgroundColor: [
+            'rgba(102, 126, 234, 0.6)',
+            'rgba(118, 75, 162, 0.6)'
+          ],
+          borderColor: [
+            'rgba(102, 126, 234, 1)',
+            'rgba(118, 75, 162, 1)'
+          ],
+          borderWidth: 2
+        }]
       },
-      x: {
-        title: {
-          display: true,
-          text: 'Question #'
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 10 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
         }
       }
-    }
-  }
-});
+    });
 
-// Load chart data from API
-async function loadChartData() {
-  try {
-    const response = await fetch('http://localhost:3000/api/results');
-    const data = await response.json();
-
-    chart.data.datasets[0].data = [
-      data.correct,
-      data.incorrect
-    ];
-    chart.update();
-
-
-
-      const labels = [];
-      for (let index = 0; index < data.responseTimes.length; index++) {
-        labels.push(`Q${index + 1}`);
+    // Computer Security Response Time Chart
+    const compsecResponseTimeChart = new Chart(document.getElementById('compsecResponseTime'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Response Time (ms)',
+          data: [],
+          borderColor: 'rgba(102, 126, 234, 1)',
+          backgroundColor: 'rgba(102, 126, 234, 0.2)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Time (ms)' }
+          },
+          x: {
+            title: { display: true, text: 'Question #' }
+          }
+        }
       }
-      chart2.data.labels = labels;
-      chart2.data.datasets[0].data = data.responseTimes;
-      chart2.update();
-    
+    });
+
+    // History Accuracy Chart
+    const historyAccuracyChart = new Chart(document.getElementById('historyAccuracy'), {
+      type: 'bar',
+      data: {
+        labels: ['Correct', 'Incorrect'],
+        datasets: [{
+          label: 'History',
+          data: [0, 0],
+          backgroundColor: [
+            'rgba(240, 147, 251, 0.6)',
+            'rgba(245, 87, 108, 0.6)'
+          ],
+          borderColor: [
+            'rgba(240, 147, 251, 1)',
+            'rgba(245, 87, 108, 1)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 10 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    // History Response Time Chart
+    const historyResponseTimeChart = new Chart(document.getElementById('historyResponseTime'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Response Time (ms)',
+          data: [],
+          borderColor: 'rgba(245, 87, 108, 1)',
+          backgroundColor: 'rgba(245, 87, 108, 0.2)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Time (ms)' }
+          },
+          x: {
+            title: { display: true, text: 'Question #' }
+          }
+        }
+      }
+    });
+
+    // Social Studies Accuracy Chart
+    const socialAccuracyChart = new Chart(document.getElementById('socialAccuracy'), {
+      type: 'bar',
+      data: {
+        labels: ['Correct', 'Incorrect'],
+        datasets: [{
+          label: 'Social Studies',
+          data: [0, 0],
+          backgroundColor: [
+            'rgba(79, 172, 254, 0.6)',
+            'rgba(0, 242, 254, 0.6)'
+          ],
+          borderColor: [
+            'rgba(79, 172, 254, 1)',
+            'rgba(0, 242, 254, 1)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 10 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    // Social Studies Response Time Chart
+    const socialResponseTimeChart = new Chart(document.getElementById('socialResponseTime'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Response Time (ms)',
+          data: [],
+          borderColor: 'rgba(79, 172, 254, 1)',
+          backgroundColor: 'rgba(79, 172, 254, 0.2)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Time (ms)' }
+          },
+          x: {
+            title: { display: true, text: 'Question #' }
+          }
+        }
+      }
+    });
+
+    // Helper function to calculate average
+    function calculateAverage(arr) {
+      if (!arr || arr.length === 0) return 0;
+      const sum = arr.reduce((a, b) => a + b, 0);
+      return Math.round(sum / arr.length);
+    }
+
+    // Load chart data from API
+    async function loadChartData() {
+      try {
+        const response = await fetch('http://localhost:3000/api/results');
+        const data = await response.json();
+
+        // Update Computer Security Accuracy
+        compsecAccuracyChart.data.datasets[0].data = [
+          data.compsecCorrect || 0,
+          data.compsecIncorrect || 0
+        ];
+        compsecAccuracyChart.update();
+
+        // Update Computer Security Response Time
+        const compsecLabels = [];
+        const compsecTimes = data.compsecResponseTime || [];
+        for (let i = 0; i < compsecTimes.length; i++) {
+          compsecLabels.push('Q' + (i + 1));
+        }
+        compsecResponseTimeChart.data.labels = compsecLabels;
+        compsecResponseTimeChart.data.datasets[0].data = compsecTimes;
+        compsecResponseTimeChart.update();
+        
+        // Update Computer Security Average
+        const compsecAvg = calculateAverage(compsecTimes);
+        document.getElementById('compsecAvg').textContent = compsecAvg;
+
+        // Update History Accuracy
+        historyAccuracyChart.data.datasets[0].data = [
+          data.historyCorrect || 0,
+          data.historyIncorrect || 0
+        ];
+        historyAccuracyChart.update();
+
+        // Update History Response Time
+        const historyLabels = [];
+        const historyTimes = data.historyResponseTime || [];
+        for (let i = 0; i < historyTimes.length; i++) {
+          historyLabels.push('Q' + (i + 1));
+        }
+        historyResponseTimeChart.data.labels = historyLabels;
+        historyResponseTimeChart.data.datasets[0].data = historyTimes;
+        historyResponseTimeChart.update();
+        
+        // Update History Average
+        const historyAvg = calculateAverage(historyTimes);
+        document.getElementById('historyAvg').textContent = historyAvg;
+
+        // Update Social Studies Accuracy
+        socialAccuracyChart.data.datasets[0].data = [
+          data.socialCorrect || 0,
+          data.socialIncorrect || 0
+        ];
+        socialAccuracyChart.update();
+
+        // Update Social Studies Response Time
+        const socialLabels = [];
+        const socialTimes = data.socialResponseTime || [];
+        for (let i = 0; i < socialTimes.length; i++) {
+          socialLabels.push('Q' + (i + 1));
+        }
+        socialResponseTimeChart.data.labels = socialLabels;
+        socialResponseTimeChart.data.datasets[0].data = socialTimes;
+        socialResponseTimeChart.update();
+        
+        // Update Social Studies Average
+        const socialAvg = calculateAverage(socialTimes);
+        document.getElementById('socialAvg').textContent = socialAvg;
+
+        console.log('Chart data loaded:', data);
+      } catch (error) {
+        console.error('Error loading chart data:', error);
+      }
+    }
+
+    // Load initial data
+    loadChartData();
 
 
-    console.log('Chart data loaded:', data);
-  } catch (error) {
-    console.error('Error loading chart data:', error);
-  }
-}
-
-// Load initial data
-loadChartData();
-
-</script>
-
+  </script>
+</body>
 </html>
