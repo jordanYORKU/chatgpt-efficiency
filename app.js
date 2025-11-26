@@ -24,7 +24,7 @@ mongoose.connect('mongodb+srv://vincent9_db_user:gMtOnCfIs4S3y4vZ@cluster1.ma9nq
 // QUIZ TESTING FUNCTIONS
 // ============================================================
 
-const openaiOnline = false; // CHATGPT IS DOWN SO USING RAND TO TEST
+const openaiOnline = true;// CHATGPT IS DOWN SO USING RAND TO TEST
 
 const quizStats = {
   total: 0,
@@ -55,7 +55,8 @@ async function getRandomAnswer() {
 
 // ChatGPT answer generator (when openaiOnline is true)
 const openai = new OpenAI({
-  apiKey: ""
+  apiKey: "" 
+});
 
 async function getChatGPTAnswer(questionText, a, b, c, d, domain) {
   const start = Date.now();
@@ -97,63 +98,62 @@ function validateChatGPTResponse(response) {
 let wss = null;
 
 // wss broadcast from inside askQuestion
-async function askQuestion(questionText, a, b, c, d, correctAnswer, chatgptans, operationTime, domain) {
-  chatgptans = chatgptans.toLowerCase();
-  correctAnswer = correctAnswer.toLowerCase();
-  quizStats.total++;
-  console.log(`Q: ${questionText}`);
-  console.log(`Domain: ${domain}`);
- 
-  let correct = false;
-  const answerSource = openaiOnline ? "ChatGPT" : "Random";
-  
-  if (chatgptans === correctAnswer) {
-    correct = true;
-    console.log(`${answerSource} Ans: ${chatgptans.toUpperCase()} ✅`);
-    console.log(`Operation Time: ${operationTime}ms`);
-  } else {
-    console.log(`${answerSource} Ans: ${chatgptans.toUpperCase()} ❌ (Correct: ${correctAnswer.toUpperCase()})`);
-    console.log(`Operation Time: ${operationTime}ms`);
-    correct = false;
-  }
+// Updated askQuestion function
+// Updated askQuestion function (without saving a/b/c/d)
+async function askQuestion(questionText, correctAnswer, chatgptans, operationTime, domain) {
+  try {
+    // Normalize answers
+    chatgptans = chatgptans.toLowerCase();
+    correctAnswer = correctAnswer.toLowerCase();
 
-  // Broadcast to connected websocket clients (if any)
-  if (wss) {
-    try {
+    // Determine correctness
+    const isCorrect = chatgptans === correctAnswer;
+
+    // Log to console
+    const answerSource = openaiOnline ? "ChatGPT" : "Random";
+    console.log(`Q: ${questionText}`);
+    console.log(`Domain: ${domain}`);
+    if (isCorrect) {
+      console.log(`${answerSource} Ans: ${chatgptans.toUpperCase()} ✅`);
+    } else {
+      console.log(`${answerSource} Ans: ${chatgptans.toUpperCase()} ❌ (Correct: ${correctAnswer.toUpperCase()})`);
+    }
+    console.log(`Operation Time: ${operationTime}ms`);
+
+    // Broadcast result to WebSocket clients
+    if (wss) {
       wss.clients.forEach(client => {
         if (client.readyState === 1) { // OPEN
           client.send(JSON.stringify({
             type: 'result',
             question: questionText,
             answer: chatgptans,
-            correct,
+            correct: isCorrect,
             responseTime: operationTime,
             domain
           }));
         }
       });
-    } catch (err) {
-      console.error('Broadcast error:', err);
     }
-  }
 
-  // Get the correct model for this domain
-  const DomainModel = domainModels[domain];
-  if (!DomainModel) { //if unknown domain (not sociology, compSec or history)
-    console.error(`Unknown domain: ${domain}`);
-    return;
-  }
+    // Select the proper Mongoose model for the domain
+    const DomainModel = domainModels[domain];
+    if (!DomainModel) {
+      console.error(`Unknown domain: ${domain}`);
+      return;
+    }
 
-  // Save answer to the appropriate collection
-  try {
+    // Save only necessary fields to DB
     await DomainModel.create({
       questionName: questionText,
-      correctBoolean: correct,
+      correctBoolean: isCorrect,
       responseTimeMs: operationTime
-      // domain is set by default in the schema
+      // domain is automatically set by schema default
     });
+
     console.log(`Saved answer successfully to ${domain} collection`);
 
+    // Broadcast DB save event
     if (wss) {
       wss.clients.forEach(client => {
         if (client.readyState === 1) {
@@ -164,10 +164,13 @@ async function askQuestion(questionText, a, b, c, d, correctAnswer, chatgptans, 
         }
       });
     }
+
   } catch (err) {
-    console.error('Error saving to DB:', err);
+    console.error('Error saving question to DB:', err);
   }
 }
+
+
 
 // ============================================================
 // API ENDPOINTS
@@ -176,80 +179,64 @@ async function askQuestion(questionText, a, b, c, d, correctAnswer, chatgptans, 
 // POST /api/ask - Main endpoint for submitting questions
 app.post('/api/ask', async (req, res) => {
   try {
-    const { question, a, b, c, d, correctAnswer, domain } = req.body;
+const question = {  
+    questionName: "What does HTTPS stand for?",
+    a: "HyperText Transfer Protocol Secure",
+    b: "High Transfer Protocol System",
+    c: "HyperText Transmission Protection Service",
+    d: "High-Level Text Protocol Security",
+    correctAnswer: "a",
+    domain: "CompSec"
+  }
 
-    // Validate domain
-    if (!domain || !domainModels[domain]) {
-      return res.status(400).json({ 
-        error: 'Invalid or missing domain. Must be one of: CompSec, History, Social' 
-      });
-    }
+ const { questionName, a, b, c, d, correctAnswer, domain } = question;
 
-    // inform client of new job
+    // Broadcast to WebSocket clients
     if (wss) {
       wss.clients.forEach(client => {
         if (client.readyState === 1) {
           client.send(JSON.stringify({
             type: 'update',
-            message: `Received ${domain} question: ${question}`
+            message: `Running test with ${domain} question...`
           }));
         }
       });
     }
     
+    // Get answer from ChatGPT or random
     let result;
     if (openaiOnline) {
-      // broadcast sending to ChatGPT
-      if (wss) {
-        wss.clients.forEach(client => client.readyState === 1 && client.send(JSON.stringify({
-          type: 'update',
-          message: `Sending question to ChatGPT...`
-        })));
-      }
-
-      result = await getChatGPTAnswer(question, a, b, c, d, domain);
-      
-      // Validate ChatGPT response
+      result = await getChatGPTAnswer(questionName, a, b, c, d, domain);
       if (!validateChatGPTResponse(result.chatgptans)) {
         return res.status(400).json({ 
-          error: 'Invalid ChatGPT response - must be a single letter (a, b, c, or d)',
+          error: 'Invalid ChatGPT response',
           receivedResponse: result.chatgptans
         });
       }
     } else {
-      // broadcast random answer simulation
-      if (wss) {
-        wss.clients.forEach(client => client.readyState === 1 && client.send(JSON.stringify({
-          type: 'update',
-          message: `Using simulated ChatGPT (random answer)...`
-        })));
-      }
       result = await getRandomAnswer();
     }
     
     const { chatgptans, operationTime } = result;
     
-    // broadcast the received answer to client
-    if (wss) {
-      wss.clients.forEach(client => {
-        if (client.readyState === 1) {
-          client.send(JSON.stringify({
-            type: 'answer',
-            message: `Answer: ${chatgptans.toUpperCase()} (Response time: ${operationTime}ms)`
-          }));
-        }
-      });
-    }
+    // Process and save to database
+  await askQuestion(
+    question.questionName,   
+    question.correctAnswer,  
+    chatgptans,              
+    operationTime,           
+    question.domain
+);
 
-    // Call your askQuestion to save to DB and perform the scoring logic
-    await askQuestion(question, a, b, c, d, correctAnswer, chatgptans, operationTime, domain);
 
     // Return result to frontend
+
     res.json({
       answer: chatgptans,
       isCorrect: chatgptans === correctAnswer.toLowerCase(),
       responseTime: operationTime,
       domain
+
     });
   } catch (error) {
     console.error('Error in /api/ask:', error);
@@ -274,7 +261,6 @@ app.use('/api/add', (req, res, next) => {
 app.get('/api/add', (req, res) => {
   res.json({ result: req.a + req.b });
 });
-
 
 // GET /api/results - Get correct/incorrect counts by domain AND response times
 app.get('/api/results', async (req, res) => {
