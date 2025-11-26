@@ -55,7 +55,7 @@ async function getRandomAnswer() {
 
 // ChatGPT answer generator (when openaiOnline is true)
 const openai = new OpenAI({
-  apiKey: "" 
+  apiKey: ""
 });
 
 async function getChatGPTAnswer(questionText, a, b, c, d, domain) {
@@ -93,13 +93,11 @@ function validateChatGPTResponse(response) {
   return true;
 }
 
-// declare wss so other functions can broadcast
 // will be assigned after HTTP server is created
 let wss = null;
 
 // wss broadcast from inside askQuestion
 // Updated askQuestion function
-// Updated askQuestion function (without saving a/b/c/d)
 async function askQuestion(questionText, correctAnswer, chatgptans, operationTime, domain) {
   try {
     // Normalize answers
@@ -143,7 +141,7 @@ async function askQuestion(questionText, correctAnswer, chatgptans, operationTim
       return;
     }
 
-    // Save only necessary fields to DB
+    // Save to DB
     await DomainModel.create({
       questionName: questionText,
       correctBoolean: isCorrect,
@@ -179,7 +177,7 @@ async function askQuestion(questionText, correctAnswer, chatgptans, operationTim
 // POST /api/ask - Main endpoint for submitting questions
 app.post('/api/ask', async (req, res) => {
   try {
-const question = {  
+const question = {  //example question
     questionName: "What does HTTPS stand for?",
     a: "HyperText Transfer Protocol Secure",
     b: "High Transfer Protocol System",
@@ -203,9 +201,8 @@ const question = {
       });
     }
     
-    // Get answer from ChatGPT or random
-    let result;
-    if (openaiOnline) {
+    // Get answer from ChatGPT 
+  
       result = await getChatGPTAnswer(questionName, a, b, c, d, domain);
       if (!validateChatGPTResponse(result.chatgptans)) {
         return res.status(400).json({ 
@@ -213,9 +210,7 @@ const question = {
           receivedResponse: result.chatgptans
         });
       }
-    } else {
-      result = await getRandomAnswer();
-    }
+
     
     const { chatgptans, operationTime } = result;
     
@@ -265,10 +260,10 @@ app.get('/api/add', (req, res) => {
 // GET /api/results - Get correct/incorrect counts by domain AND response times
 app.get('/api/results', async (req, res) => {
   try {
-  
-    let allResponseTimes = [];
-    let totalCorrect = 0;
-    let totalIncorrect = 0;
+
+    let history = [];
+    let social = [];
+    let compsec = [];
 
     const correctData = await CompSec.countDocuments({ correctBoolean: true });
     const falseData = await CompSec.countDocuments({ correctBoolean: false });
@@ -279,11 +274,6 @@ app.get('/api/results', async (req, res) => {
     const correctData3 = await Social.countDocuments({ correctBoolean: true });
     const falseData3 = await Social.countDocuments({ correctBoolean: false });
 
-
-
-    totalCorrect = correctData + correctData2 + correctData3;
-    totalIncorrect = falseData + falseData2 + falseData3;
-      
     //get all response times
       const records = await History.find({}, 'responseTimeMs')
       const records2 = await CompSec.find({}, 'responseTimeMs')
@@ -291,21 +281,27 @@ app.get('/api/results', async (req, res) => {
 
     //pushing all domain responses array to overall array
     for (let i = 0; i < records.length; i++) {
-      allResponseTimes.push(records[i].responseTimeMs);
+  history.push(records[i].responseTimeMs);
     }
     for (let i = 0; i < records2.length; i++) {
-      allResponseTimes.push(records2[i].responseTimeMs);
+  compsec.push(records2[i].responseTimeMs);
     }
     for (let i = 0; i < records3.length; i++) {
-      allResponseTimes.push(records3[i].responseTimeMs);
+  social.push(records3[i].responseTimeMs);
     }
     
     
     res.json({
-        correct: totalCorrect,
-        incorrect: totalIncorrect,
-        total: totalCorrect + totalIncorrect,
-      responseTimes: allResponseTimes 
+        compsecCorrect: correctData,
+        compsecIncorrect: falseData,
+        historyCorrect: correctData2,
+        historyIncorrect: falseData2,
+        socialCorrect: correctData3,
+        socialIncorrect: falseData3,
+
+        historyResponseTime: history,
+        compsecResponseTime: compsec,
+        socialResponseTime: social
     });
   } catch (error) {
     console.error('Error fetching data:', error);
