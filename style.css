@@ -328,6 +328,28 @@ nav a:hover {
     to   { transform: translateX(250px) scale(0.25) rotate(360deg); }
 }
 
+.run-button-container {
+    margin-left: 160px;
+    margin-top: 20px;
+}
+
+.run-button {
+    background-color: #1D1D1F;
+    color: #787878;
+    border: 2px solid #2C2C2F;
+    padding: 12px 26px;
+    font-size: 16px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.run-button:hover {
+    color: #FFFFFF;
+    border-color: #3C3C40;
+}
 
 .typewriter {
     margin-top: -30px;
