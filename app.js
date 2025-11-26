@@ -56,7 +56,6 @@ async function getRandomAnswer() {
 // ChatGPT answer generator (when openaiOnline is true)
 const openai = new OpenAI({
   apiKey: ""
-});
 
 async function getChatGPTAnswer(questionText, a, b, c, d, domain) {
   const start = Date.now();
@@ -259,7 +258,7 @@ app.post('/api/ask', async (req, res) => {
 });
 
 // GET /api/add - Middleware validation demo (required by assignment)
-app.get('/api/add', (req, res) => {
+app.use('/api/add', (req, res, next) => {
   const a = parseInt(req.query.a);
   const b = parseInt(req.query.b);
   
@@ -267,8 +266,15 @@ app.get('/api/add', (req, res) => {
     return res.status(400).json({ error: 'Invalid inputs - a and b must be numbers' });
   }
   
-  res.json({ result: a + b });
+  req.a = a;
+  req.b = b;
+  next();
 });
+
+app.get('/api/add', (req, res) => {
+  res.json({ result: req.a + req.b });
+});
+
 
 // GET /api/results - Get correct/incorrect counts by domain AND response times
 app.get('/api/results', async (req, res) => {
@@ -292,12 +298,12 @@ app.get('/api/results', async (req, res) => {
     totalCorrect = correctData + correctData2 + correctData3;
     totalIncorrect = falseData + falseData2 + falseData3;
       
-      //get all response times
+    //get all response times
       const records = await History.find({}, 'responseTimeMs')
       const records2 = await CompSec.find({}, 'responseTimeMs')
       const records3 = await Social.find({}, 'responseTimeMs')
 
-      //pushing all domain responses array to overall array
+    //pushing all domain responses array to overall array
     for (let i = 0; i < records.length; i++) {
       allResponseTimes.push(records[i].responseTimeMs);
     }
