@@ -4,8 +4,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import OpenAI from 'openai';
 import { WebSocketServer } from 'ws';
-
-// Import the three separate models
 import CompSec from './model/compsec.js';
 import History from './model/histories.js';
 import Social from './model/socials.js';
@@ -18,7 +16,7 @@ app.use(express.json());
 app.use(express.static('.'));
 
 // MongoDB Connection to ChatGPT_Evaluation database
-mongoose.connect('PRIVATE')
+mongoose.connect('mongodb+srv://vincent9_db_user:gMtOnCfIs4S3y4vZ@cluster1.ma9nq2d.mongodb.net/ChatGPT_Evaluation')
   .then(() => console.log('MongoDB Connected to ChatGPT_Evaluation'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
@@ -57,7 +55,7 @@ async function getRandomAnswer() {
 
 // ChatGPT answer generator (when openaiOnline is true)
 const openai = new OpenAI({
-  apiKey: "PRIVATE" 
+  apiKey: ""
 });
 
 async function getChatGPTAnswer(questionText, a, b, c, d, domain) {
@@ -79,7 +77,7 @@ Domain: ${domain}
     temperature: 0
   });
   const chatgptans = response.choices[0].message.content.trim().toLowerCase();
-  const operationTime = Date.now() - start;
+  const operationTime = Date.now() - start; //response time
   return {chatgptans, operationTime};
 }
 
@@ -111,7 +109,6 @@ async function askQuestion(questionText, a, b, c, d, correctAnswer, chatgptans, 
   const answerSource = openaiOnline ? "ChatGPT" : "Random";
   
   if (chatgptans === correctAnswer) {
-    quizStats.right++;
     correct = true;
     console.log(`${answerSource} Ans: ${chatgptans.toUpperCase()} ✅`);
     console.log(`Operation Time: ${operationTime}ms`);
@@ -143,7 +140,7 @@ async function askQuestion(questionText, a, b, c, d, correctAnswer, chatgptans, 
 
   // Get the correct model for this domain
   const DomainModel = domainModels[domain];
-  if (!DomainModel) {
+  if (!DomainModel) { //if unknown domain (not sociology, compSec or history)
     console.error(`Unknown domain: ${domain}`);
     return;
   }
@@ -171,8 +168,6 @@ async function askQuestion(questionText, a, b, c, d, correctAnswer, chatgptans, 
   } catch (err) {
     console.error('Error saving to DB:', err);
   }
-
-  console.log(`Score so far → Right: ${quizStats.right}, Total: ${quizStats.total}\n`);
 }
 
 // ============================================================
@@ -275,67 +270,50 @@ app.get('/api/add', (req, res) => {
   res.json({ result: a + b });
 });
 
-// GET /api/results - Get correct/incorrect counts by domain
 // GET /api/results - Get correct/incorrect counts by domain AND response times
 app.get('/api/results', async (req, res) => {
   try {
-    const { domain } = req.query;
-
-    if (domain) {
-      // Get results for specific domain
-      const DomainModel = domainModels[domain];
-      if (!DomainModel) {
-        return res.status(400).json({ error: 'Invalid domain' });
-      }
-
-      const correct = await DomainModel.countDocuments({ correctBoolean: true });
-      const incorrect = await DomainModel.countDocuments({ correctBoolean: false });
-      
-      // Get response times for this domain
-      const records = await DomainModel.find({}, 'responseTimeMs').sort({ _id: 1 });
-      const responseTimes = records.map(r => r.responseTimeMs);
-
-      return res.json({
-        domain,
-        correct,
-        incorrect,
-        total: correct + incorrect,
-        responseTimes
-      });
-    }
-
-    // Get results for all domains
-    const results = {};
+  
+    let allResponseTimes = [];
     let totalCorrect = 0;
     let totalIncorrect = 0;
-    let allResponseTimes = [];
 
-    for (const [domainName, Model] of Object.entries(domainModels)) {
-      const correct = await Model.countDocuments({ correctBoolean: true });
-      const incorrect = await Model.countDocuments({ correctBoolean: false });
-      
-      results[domainName] = {
-        correct,
-        incorrect,
-        total: correct + incorrect
-      };
+    const correctData = await CompSec.countDocuments({ correctBoolean: true });
+    const falseData = await CompSec.countDocuments({ correctBoolean: false });
 
-      totalCorrect += correct;
-      totalIncorrect += incorrect;
+    const correctData2 = await History.countDocuments({ correctBoolean: true });
+    const falseData2 = await History.countDocuments({ correctBoolean: false });
+
+    const correctData3 = await Social.countDocuments({ correctBoolean: true });
+    const falseData3 = await Social.countDocuments({ correctBoolean: false });
+
+
+
+    totalCorrect = correctData + correctData2 + correctData3;
+    totalIncorrect = falseData + falseData2 + falseData3;
       
-      // Collect response times from this domain
-      const records = await Model.find({}, 'responseTimeMs').sort({ _id: 1 });
-      allResponseTimes.push(...records.map(r => r.responseTimeMs));
+      //get all response times
+      const records = await History.find({}, 'responseTimeMs')
+      const records2 = await CompSec.find({}, 'responseTimeMs')
+      const records3 = await Social.find({}, 'responseTimeMs')
+
+      //pushing all domain responses array to overall array
+    for (let i = 0; i < records.length; i++) {
+      allResponseTimes.push(records[i].responseTimeMs);
     }
-
+    for (let i = 0; i < records2.length; i++) {
+      allResponseTimes.push(records2[i].responseTimeMs);
+    }
+    for (let i = 0; i < records3.length; i++) {
+      allResponseTimes.push(records3[i].responseTimeMs);
+    }
+    
+    
     res.json({
-      byDomain: results,
-      overall: {
         correct: totalCorrect,
         incorrect: totalIncorrect,
-        total: totalCorrect + totalIncorrect
-      },
-      responseTimes: allResponseTimes // NEW: All response times across all domains
+        total: totalCorrect + totalIncorrect,
+      responseTimes: allResponseTimes 
     });
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -383,6 +361,4 @@ wss.broadcast = broadcast;
 const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`Server (HTTP + WebSocket) running on port ${PORT}`);
-  console.log(`Database: ChatGPT_Evaluation`);
-  console.log(`Collections: compsecs, histories, socials`);
 });
