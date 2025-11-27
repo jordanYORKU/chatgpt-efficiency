@@ -367,3 +367,42 @@ nav a:hover {
     display: inline-block;
     white-space: pre-wrap;
 }
+
+#tip-guide {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #1c1c1c;
+    color: white;
+    padding: 14px 16px;
+    width: 220px;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+    animation: bob 2.3s ease-in-out infinite;
+    z-index: 9999;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+#tip-guide .tip-text {
+    font-size: 0.9rem;
+    line-height: 1.3rem;
+    transition: opacity 0.3s ease;  
+}
+
+#tip-guide #tip-close {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    position: absolute;
+    top: 6px;
+    right: 8px;
+}
+
+@keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
