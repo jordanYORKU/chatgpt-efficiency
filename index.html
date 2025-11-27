@@ -50,6 +50,12 @@
         </div>
     </div>
 
+    <div id="tip-guide" role="status" aria-live="polite" aria-atomic="true">
+        <button id="tip-close" aria-label="Close tips">✕</button>
+        <div class="tip-icon" aria-hidden="true">💡</div>
+        <div class="tip-text">Click "Run Analysis" to begin the Evaluation</div>
+    </div>
+
     <script>
         async function runTest() {
             const button = document.getElementById('runButton');
